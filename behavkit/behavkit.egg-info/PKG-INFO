@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: behavkit
+Version: 0.3.0
+Summary: Reusable pipeline for DeepLabCut + Behavsoft data: preprocessing, kinematic features, threshold-based detection, and Random Forest classification, with CSV exports for external statistics/plotting and annotated videos.
+Requires-Python: >=3.9
+Requires-Dist: pandas>=1.5
+Requires-Dist: numpy>=1.23
+Requires-Dist: scikit-learn>=1.2
+Requires-Dist: opencv-python-headless>=4.7
+Requires-Dist: tables>=3.8
+Requires-Dist: xlrd>=2.0
+Requires-Dist: openpyxl>=3.1
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: balanced
+Requires-Dist: imbalanced-learn>=0.11; extra == "balanced"

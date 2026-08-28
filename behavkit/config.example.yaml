@@ -1,0 +1,92 @@
+# behavkit configuration file
+# Fill in the parameters below and run:
+#
+#   import behavkit as bk
+#   results = bk.run_pipeline("config.yaml")
+#
+# Every stage below writes its output as CSV (or JSON for hyperparameters) --
+# use whatever stats/plotting tool you prefer on those files. Any parameter
+# you omit falls back to the default in behavkit/config.py.
+
+project:
+  name: "open_field_test"
+  fps: 30
+  random_state: 42
+
+paths:
+  behavsoft_dir: "behavsoft_ethograms"   # folder with manual scoring spreadsheets (.xls)
+  dlc_dir: "dlc_outputs"                 # folder with DeepLabCut outputs (.h5)
+  raw_video_dir: "raw_videos"            # folder with the original .mp4 files (for video_annotation)
+  output_dir: "outputs"
+  annotated_video_dir: "outputs/videos"
+  holdout_split_path: "outputs/holdout_video_ids.csv"
+  model_report_path: "outputs/model_classification_report.csv"
+  confusion_matrix_path: "outputs/model_confusion_matrix.csv"
+  best_params_path: "outputs/model_best_params.json"
+  sequences_path: "outputs/behavior_sequences.csv"
+  threshold_metrics_path: "outputs/threshold_cv_metrics.csv"
+  activity_data_path: "outputs/activity_by_frame.csv"
+  bout_metrics_path: "outputs/bout_metrics.csv"
+  bout_details_path: "outputs/bout_details.csv"
+  xls_extension: ".xls"    # use ".xlsx" if your scoring sheets are saved in that format
+  h5_extension: ".h5"
+
+preprocessing:
+  likelihood_threshold: null   # e.g. 0.9 to interpolate low-confidence DLC points; null disables it
+  interpolate_limit: 10
+  label_map: null              # e.g. {"Swim_raw": "Swim", "Freeze_raw": "Freezing"}
+  exclude_label: "other"
+
+features:
+  velocity_bodyparts: [nose, head, body, tail_base]
+  distance_pairs:
+    - [nose, tail_base]
+  angle_triplets:
+    - [nose, body, tail_base]
+  oscillation_bodyparts: []    # e.g. [[head, 10]] -- [bodypart, window_frames]
+  polygon_specs: []            # e.g. [{name: torso_area, vertices: [nose, head, tail_base], anchor_pair: [body, tail_base]}]
+  rolling_windows: [5, 15, 30]
+
+modeling:
+  enabled: true
+  base_feature_columns: null   # null = derived automatically as vel_<bodypart> for each velocity_bodyparts entry
+  fuse_labels: null            # e.g. {Freezing: Immobility, Floating: Immobility}
+  exclude_labels: []           # e.g. [Dive] -- classes occurring in too few videos to model reliably
+  param_grid:
+    max_depth: [10, null]
+    min_samples_split: [2, 10]
+    min_samples_leaf: [1, 5]
+  n_estimators_search: 100
+  n_estimators_final: 500
+  use_balanced_rf: false       # true = BalancedRandomForestClassifier (requires the [balanced] extra)
+  class_weight: balanced_subsample
+  cv_splits: 5
+  scoring: f1_macro
+  # Output: model_report_path (per-class precision/recall/F1), confusion_matrix_path, best_params_path
+
+sequences:
+  enabled: true
+  behavior_column: y_target_behavior
+  # Output: sequences_path -- one row per behavior event (video_id, event_order,
+  # behavior, start_s, end_s, duration_s), built from ALL frames (df_full,
+  # including 'other'), for Markov-chain or other sequence analysis in an
+  # external tool (R, MATLAB, etc.).
+
+threshold_detection:
+  enabled: false
+  activity_columns: []         # e.g. [vel_nose_mean_15, vel_head_mean_15, vel_body_mean_15]
+  positive_labels: []          # e.g. [Freezing, Floating] -- labels counted as the positive class
+  lower_activity_is_positive: true
+  min_duration_frames: 30      # ~1s at 30fps
+  cv_splits: 5
+  export_raw_activity_data: true   # per-frame activity + label CSV, for distribution/ROC analysis elsewhere
+  # Output: threshold_metrics_path (per-fold CV results), activity_data_path,
+  # bout_metrics_path (frequency/duration/latency per video), bout_details_path
+  # (per-bout start/end, annotation vs. prediction -- for an alignment plot elsewhere)
+
+video_annotation:
+  enabled: false
+  mode: classification         # "classification" or "threshold"
+  example_video_id: null       # null = use the first available video
+  filename_template: "{video_id}.mp4"   # how video_id maps to a file inside raw_video_dir
+  class_colors: null           # e.g. {Immobility: [0, 0, 220]} (BGR, only used when mode is "classification")

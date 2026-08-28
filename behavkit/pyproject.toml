@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "behavkit"
+version = "0.3.0"
+description = "Reusable pipeline for DeepLabCut + Behavsoft data: preprocessing, kinematic features, threshold-based detection, and Random Forest classification, with CSV exports for external statistics/plotting and annotated videos."
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=1.5",
+    "numpy>=1.23",
+    "scikit-learn>=1.2",
+    "opencv-python-headless>=4.7",
+    "tables>=3.8",       # reading .h5 files
+    "xlrd>=2.0",         # reading .xls files
+    "openpyxl>=3.1",     # reading .xlsx files
+    "pyyaml>=6.0",       # config file loading
+]
+
+[project.optional-dependencies]
+balanced = ["imbalanced-learn>=0.11"]
+
+[tool.setuptools.packages.find]
+include = ["behavkit*"]
